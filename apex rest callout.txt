@@ -1,0 +1,67 @@
+AnimalLocator.cls
+
+public class AnimalLocator {
+	public class cls_animal {
+		public Integer id;	
+		public String name;	
+		public String eats;	
+		public String says;	
+	}    
+public class JSONOutput{
+	public cls_animal animal;
+
+   	//public JSONOutput parse(String json){
+	//return (JSONOutput) System.JSON.deserialize(json, JSONOutput.class);
+	//}
+}
+    
+    public static String getAnimalNameById (Integer id) {
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint('https://th-apex-http-callout.herokuapp.com/animals/' + id);
+        //request.setHeader('id', String.valueof(id)); -- cannot be used in this challenge :)
+        request.setMethod('GET');
+        HttpResponse response = http.send(request);
+        system.debug('response: ' + response.getBody());
+        //Map<String,Object> map_results = (Map<String,Object>) JSON.deserializeUntyped(response.getBody());
+        jsonOutput results = (jsonOutput) JSON.deserialize(response.getBody(), jsonOutput.class);
+        //Object results = (Object) map_results.get('animal');
+		system.debug('results= ' + results.animal.name);
+        return(results.animal.name);
+    }
+
+}
+
+AnimalLocatorMock.cls
+
+@IsTest
+global class AnimalLocatorMock implements HttpCalloutMock {
+    
+    global HTTPresponse respond(HTTPrequest request) {
+        Httpresponse response = new Httpresponse();
+        response.setStatusCode(200);
+        //-- directly output the JSON, instead of creating a logic
+        //response.setHeader('key, value)
+        //Integer id = Integer.valueof(request.getHeader('id'));
+        //Integer id = 1;
+        //List<String> lst_body = new List<String> {'majestic badger', 'fluffy bunny'};
+        //system.debug('animal return value: ' + lst_body[id]);
+        response.setBody('{"animal":{"id":1,"name":"chicken","eats":"chicken food","says":"cluck cluck"}}');
+        return response;
+    }
+
+}
+
+AnimalLocatorTest.cls
+
+@IsTest
+public class AnimalLocatorTest {
+    @isTest
+    public static void testAnimalLocator() {
+        Test.setMock(HttpCalloutMock.class, new AnimalLocatorMock());
+        //Httpresponse response = AnimalLocator.getAnimalNameById(1);
+        String s =  AnimalLocator.getAnimalNameById(1);
+        system.debug('string returned: ' + s);
+    }
+
+}
